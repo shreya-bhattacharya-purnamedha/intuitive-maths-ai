@@ -303,28 +303,42 @@ sys.stdout.getvalue()
 
       {/* Run Button */}
       <div className="px-4 py-3 border-t border-[var(--viz-grid)] bg-[var(--surface-elevated)]">
-        <button
-          onClick={handleRun}
-          disabled={isRunning || (language === 'python' && !isPyodideReady)}
-          className="flex items-center gap-2 px-4 py-2 bg-[var(--success)] hover:bg-[var(--success)]/90 disabled:bg-[var(--viz-grid)] disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-colors"
-        >
-          {isRunning ? (
-            <>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleRun}
+            disabled={isRunning || (language === 'python' && !isPyodideReady)}
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--success)] hover:bg-[var(--success)]/90 disabled:bg-[var(--viz-grid)] disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-colors"
+          >
+            {isRunning ? (
+              <>
+                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Running...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                </svg>
+                Run Code
+              </>
+            )}
+          </button>
+          {language === 'python' && !isPyodideReady && !error && (
+            <span className="text-sm text-[var(--foreground)]/60 flex items-center gap-2">
               <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
-              Running...
-            </>
-          ) : (
-            <>
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-              </svg>
-              Run Code
-            </>
+              Loading Python runtime... (first load may take 10-20s)
+            </span>
           )}
-        </button>
+          {language === 'python' && isPyodideReady && (
+            <span className="text-xs text-[var(--success)]">Python ready</span>
+          )}
+        </div>
       </div>
 
       {/* Output Panel */}
