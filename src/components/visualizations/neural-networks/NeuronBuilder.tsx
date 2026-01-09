@@ -92,6 +92,13 @@ export function NeuronBuilder({
     };
   }, [inputs, bias, activation]);
 
+  // Animation phase helpers
+  const shouldShowInputs = animationPhase !== 'inputs' || !isAnimating;
+  const shouldShowWeights = ['weighted', 'sum', 'activation', 'output'].includes(animationPhase) || !isAnimating;
+  const shouldShowSum = ['sum', 'activation', 'output'].includes(animationPhase) || !isAnimating;
+  const shouldShowActivation = ['activation', 'output'].includes(animationPhase) || !isAnimating;
+  const shouldShowOutput = animationPhase === 'output' || !isAnimating;
+
   // Draw main neuron diagram
   useEffect(() => {
     if (!svgRef.current) return;
@@ -118,15 +125,18 @@ export function NeuronBuilder({
 
     inputs.forEach((inp, i) => {
       const y = inputSpacing * (i + 1);
+      const isInputPhase = animationPhase === 'inputs' && isAnimating;
+      const isWeightedPhase = animationPhase === 'weighted' && isAnimating;
 
-      // Input circle
+      // Input circle - pulse during input phase
       mainGroup.append('circle')
         .attr('cx', inputX)
         .attr('cy', y)
         .attr('r', 25)
-        .attr('fill', 'var(--surface-elevated)')
+        .attr('fill', isInputPhase ? inp.color : 'var(--surface-elevated)')
         .attr('stroke', inp.color)
-        .attr('stroke-width', 2);
+        .attr('stroke-width', isInputPhase ? 4 : 2)
+        .attr('opacity', isInputPhase ? 1 : (shouldShowInputs ? 1 : 0.3));
 
       // Input label
       mainGroup.append('text')
@@ -143,8 +153,8 @@ export function NeuronBuilder({
         .attr('x', inputX)
         .attr('y', y + 4)
         .attr('text-anchor', 'middle')
-        .attr('fill', inp.color)
-        .attr('font-size', '14px')
+        .attr('fill', isInputPhase ? 'white' : inp.color)
+        .attr('font-size', isInputPhase ? '16px' : '14px')
         .attr('font-weight', 'bold')
         .text(inp.value.toFixed(1));
 
@@ -158,8 +168,8 @@ export function NeuronBuilder({
         .attr('x2', neuronX - neuronRadius)
         .attr('y2', neuronY)
         .attr('stroke', inp.weight > 0 ? 'var(--success)' : 'var(--error)')
-        .attr('stroke-width', lineWidth)
-        .attr('opacity', 0.6);
+        .attr('stroke-width', isWeightedPhase ? lineWidth + 2 : lineWidth)
+        .attr('opacity', shouldShowWeights ? (isWeightedPhase ? 1 : 0.6) : 0.2);
 
       // Weight label on connection
       const midX = (inputX + 25 + neuronX - neuronRadius) / 2;
@@ -170,130 +180,142 @@ export function NeuronBuilder({
         .attr('y', midY - 10)
         .attr('width', 40)
         .attr('height', 20)
-        .attr('fill', 'var(--surface)')
-        .attr('rx', 4);
+        .attr('fill', isWeightedPhase ? (inp.weight > 0 ? 'var(--success)' : 'var(--error)') : 'var(--surface)')
+        .attr('rx', 4)
+        .attr('opacity', shouldShowWeights ? 1 : 0.3);
 
       mainGroup.append('text')
         .attr('x', midX)
         .attr('y', midY + 4)
         .attr('text-anchor', 'middle')
-        .attr('fill', inp.weight > 0 ? 'var(--success)' : 'var(--error)')
-        .attr('font-size', '12px')
+        .attr('fill', isWeightedPhase ? 'white' : (inp.weight > 0 ? 'var(--success)' : 'var(--error)'))
+        .attr('font-size', isWeightedPhase ? '14px' : '12px')
         .attr('font-weight', 'bold')
         .text(`×${inp.weight > 0 ? '+' : ''}${inp.weight}`);
 
-      // Show weighted value (if in voting metaphor mode)
-      if (showVotingMetaphor) {
+      // Show weighted value (if in voting metaphor mode or weighted phase)
+      if (showVotingMetaphor || isWeightedPhase) {
         const weighted = inp.value * inp.weight;
         mainGroup.append('text')
           .attr('x', midX)
           .attr('y', midY + 20)
           .attr('text-anchor', 'middle')
-          .attr('fill', 'var(--foreground)')
-          .attr('font-size', '10px')
-          .attr('opacity', 0.7)
+          .attr('fill', isWeightedPhase ? (weighted > 0 ? 'var(--success)' : 'var(--error)') : 'var(--foreground)')
+          .attr('font-size', isWeightedPhase ? '12px' : '10px')
+          .attr('font-weight', isWeightedPhase ? 'bold' : 'normal')
+          .attr('opacity', shouldShowWeights ? (isWeightedPhase ? 1 : 0.7) : 0)
           .text(`= ${weighted > 0 ? '+' : ''}${weighted.toFixed(1)}`);
       }
     });
 
     // Draw main neuron
     const neuronY = innerHeight / 2;
+    const isSumPhase = animationPhase === 'sum' && isAnimating;
+    const isActivationPhase = animationPhase === 'activation' && isAnimating;
+    const isOutputPhase = animationPhase === 'output' && isAnimating;
 
-    // Neuron glow if firing
-    if (calculation.fires) {
+    // Neuron glow if firing (only show in output phase or when not animating)
+    if (calculation.fires && shouldShowOutput) {
       mainGroup.append('circle')
         .attr('cx', neuronX)
         .attr('cy', neuronY)
         .attr('r', neuronRadius + 10)
         .attr('fill', 'var(--primary)')
-        .attr('opacity', 0.3);
+        .attr('opacity', isOutputPhase ? 0.5 : 0.3);
     }
 
-    // Neuron body
+    // Neuron body - highlight during sum phase
     mainGroup.append('circle')
       .attr('cx', neuronX)
       .attr('cy', neuronY)
       .attr('r', neuronRadius)
-      .attr('fill', calculation.fires ? 'var(--primary)' : 'var(--surface-elevated)')
+      .attr('fill', isSumPhase ? 'var(--primary)' : (shouldShowOutput && calculation.fires ? 'var(--primary)' : 'var(--surface-elevated)'))
       .attr('stroke', 'var(--primary)')
-      .attr('stroke-width', 3);
+      .attr('stroke-width', isSumPhase ? 5 : 3)
+      .attr('opacity', shouldShowSum ? 1 : 0.4);
 
     // Sigma symbol
     mainGroup.append('text')
       .attr('x', neuronX)
       .attr('y', neuronY - 10)
       .attr('text-anchor', 'middle')
-      .attr('fill', calculation.fires ? 'white' : 'var(--foreground)')
-      .attr('font-size', '24px')
+      .attr('fill', (isSumPhase || (shouldShowOutput && calculation.fires)) ? 'white' : 'var(--foreground)')
+      .attr('font-size', isSumPhase ? '28px' : '24px')
       .text('Σ');
 
-    // Pre-activation value
+    // Pre-activation value - show progressively
     mainGroup.append('text')
       .attr('x', neuronX)
       .attr('y', neuronY + 15)
       .attr('text-anchor', 'middle')
-      .attr('fill', calculation.fires ? 'white' : 'var(--foreground)')
-      .attr('font-size', '14px')
+      .attr('fill', (isSumPhase || (shouldShowOutput && calculation.fires)) ? 'white' : 'var(--foreground)')
+      .attr('font-size', isSumPhase ? '16px' : '14px')
       .attr('font-weight', 'bold')
+      .attr('opacity', shouldShowSum ? 1 : 0)
       .text(calculation.preActivation.toFixed(1));
 
-    // Bias annotation
+    // Bias annotation - highlight during sum phase
     mainGroup.append('text')
       .attr('x', neuronX)
       .attr('y', neuronY + neuronRadius + 20)
       .attr('text-anchor', 'middle')
-      .attr('fill', 'var(--foreground)')
-      .attr('font-size', '11px')
-      .attr('opacity', 0.7)
+      .attr('fill', isSumPhase ? 'var(--primary)' : 'var(--foreground)')
+      .attr('font-size', isSumPhase ? '13px' : '11px')
+      .attr('font-weight', isSumPhase ? 'bold' : 'normal')
+      .attr('opacity', shouldShowSum ? (isSumPhase ? 1 : 0.7) : 0.3)
       .text(`bias: ${bias > 0 ? '+' : ''}${bias}`);
 
-    // Output connection
+    // Output connection - highlight during activation phase
     mainGroup.append('line')
       .attr('x1', neuronX + neuronRadius)
       .attr('y1', neuronY)
       .attr('x2', outputX - 25)
       .attr('y2', neuronY)
       .attr('stroke', 'var(--primary)')
-      .attr('stroke-width', 3)
-      .attr('opacity', 0.6);
+      .attr('stroke-width', isActivationPhase ? 5 : 3)
+      .attr('opacity', shouldShowActivation ? (isActivationPhase ? 1 : 0.6) : 0.2);
 
-    // Activation function box
+    // Activation function box - highlight during activation phase
     const actX = (neuronX + neuronRadius + outputX - 25) / 2;
     mainGroup.append('rect')
       .attr('x', actX - 30)
       .attr('y', neuronY - 15)
       .attr('width', 60)
       .attr('height', 30)
-      .attr('fill', 'var(--surface)')
-      .attr('stroke', 'var(--viz-grid)')
-      .attr('rx', 4);
+      .attr('fill', isActivationPhase ? 'var(--primary)' : 'var(--surface)')
+      .attr('stroke', isActivationPhase ? 'var(--primary)' : 'var(--viz-grid)')
+      .attr('stroke-width', isActivationPhase ? 2 : 1)
+      .attr('rx', 4)
+      .attr('opacity', shouldShowActivation ? 1 : 0.3);
 
     mainGroup.append('text')
       .attr('x', actX)
       .attr('y', neuronY + 5)
       .attr('text-anchor', 'middle')
-      .attr('fill', 'var(--primary)')
-      .attr('font-size', '11px')
+      .attr('fill', isActivationPhase ? 'white' : 'var(--primary)')
+      .attr('font-size', isActivationPhase ? '13px' : '11px')
       .attr('font-weight', 'bold')
       .text(activationFunctions[activation].name);
 
-    // Output circle
+    // Output circle - highlight during output phase
     mainGroup.append('circle')
       .attr('cx', outputX)
       .attr('cy', neuronY)
-      .attr('r', 25)
-      .attr('fill', calculation.fires ? 'var(--success)' : 'var(--surface-elevated)')
-      .attr('stroke', calculation.fires ? 'var(--success)' : 'var(--viz-grid)')
-      .attr('stroke-width', 2);
+      .attr('r', isOutputPhase ? 30 : 25)
+      .attr('fill', shouldShowOutput ? (calculation.fires ? 'var(--success)' : 'var(--surface-elevated)') : 'var(--surface-elevated)')
+      .attr('stroke', shouldShowOutput ? (calculation.fires ? 'var(--success)' : 'var(--viz-grid)') : 'var(--viz-grid)')
+      .attr('stroke-width', isOutputPhase ? 4 : 2)
+      .attr('opacity', shouldShowOutput ? 1 : 0.3);
 
     // Output value
     mainGroup.append('text')
       .attr('x', outputX)
       .attr('y', neuronY + 5)
       .attr('text-anchor', 'middle')
-      .attr('fill', calculation.fires ? 'white' : 'var(--foreground)')
-      .attr('font-size', '14px')
+      .attr('fill', shouldShowOutput && calculation.fires ? 'white' : 'var(--foreground)')
+      .attr('font-size', isOutputPhase ? '16px' : '14px')
       .attr('font-weight', 'bold')
+      .attr('opacity', shouldShowOutput ? 1 : 0)
       .text(calculation.output.toFixed(2));
 
     // Output label
@@ -301,9 +323,10 @@ export function NeuronBuilder({
       .attr('x', outputX)
       .attr('y', neuronY + 45)
       .attr('text-anchor', 'middle')
-      .attr('fill', 'var(--foreground)')
-      .attr('font-size', '12px')
+      .attr('fill', isOutputPhase ? (calculation.fires ? 'var(--success)' : 'var(--error)') : 'var(--foreground)')
+      .attr('font-size', isOutputPhase ? '16px' : '12px')
       .attr('font-weight', 'bold')
+      .attr('opacity', shouldShowOutput ? 1 : 0)
       .text(calculation.fires ? 'GO!' : 'No');
 
     // Title
@@ -316,7 +339,27 @@ export function NeuronBuilder({
       .attr('font-weight', 'bold')
       .text(showVotingMetaphor ? 'Restaurant Decision Neuron' : 'Single Neuron');
 
-  }, [inputs, bias, activation, calculation, showVotingMetaphor, width, height]);
+    // Animation phase indicator
+    if (isAnimating) {
+      const phaseLabels: Record<typeof animationPhase, string> = {
+        inputs: '1/5: Reading Inputs',
+        weighted: '2/5: Applying Weights',
+        sum: '3/5: Summing + Bias',
+        activation: '4/5: Activation Function',
+        output: '5/5: Final Decision!',
+      };
+
+      svg.append('text')
+        .attr('x', width / 2)
+        .attr('y', height - 10)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'var(--primary)')
+        .attr('font-size', '12px')
+        .attr('font-weight', 'bold')
+        .text(phaseLabels[animationPhase]);
+    }
+
+  }, [inputs, bias, activation, calculation, showVotingMetaphor, width, height, animationPhase, isAnimating, shouldShowInputs, shouldShowWeights, shouldShowSum, shouldShowActivation, shouldShowOutput]);
 
   // Draw activation function graph
   useEffect(() => {
