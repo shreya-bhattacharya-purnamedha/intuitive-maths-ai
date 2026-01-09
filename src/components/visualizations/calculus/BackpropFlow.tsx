@@ -291,8 +291,8 @@ export function BackpropFlow({
                         phase === 'forward' ? 'url(#forwardGrad)' : 'var(--viz-grid)')
         .attr('stroke-width', Math.abs(edge.weight) * 4 + 1)
         .attr('opacity', phase === 'idle' ? 0.3 : 0.8)
-        .attr('marker-end', phase === 'forward' ? 'url(#arrowForward)' : undefined)
-        .attr('marker-start', phase === 'backward' ? 'url(#arrowBackward)' : undefined);
+        .attr('marker-end', phase === 'forward' ? 'url(#arrowForward)' : null)
+        .attr('marker-start', phase === 'backward' ? 'url(#arrowBackward)' : null);
 
       // Weight label
       const midX = (sourcePos.x + targetPos.x) / 2;
