@@ -257,7 +257,7 @@ export function LossLandscape({
         .domain([d3.min(values) || 0, d3.max(values) || 10]);
 
       // Transform contour coordinates to SVG coordinates
-      const transform = (coords: number[][]) => {
+      const transform = (coords: [number, number][][]) => {
         return coords.map(ring =>
           ring.map(point => [
             (point[0] / n) * innerWidth,
@@ -276,7 +276,7 @@ export function LossLandscape({
           const transformed = {
             ...d,
             coordinates: d.coordinates.map(polygon =>
-              transform(polygon as number[][])
+              transform(polygon as [number, number][][])
             )
           };
           return d3.geoPath()(transformed as any);
@@ -489,9 +489,10 @@ export function LossLandscape({
   }, [landscape, id, markInteractionComplete]);
 
   // Change landscape
-  const handleLandscapeChange = useCallback((newLandscape: string) => {
+  type LandscapeKey = 'bowl' | 'valley' | 'localMinima' | 'saddle' | 'ravine';
+  const handleLandscapeChange = useCallback((newLandscape: LandscapeKey) => {
     setIsRunning(false);
-    setCurrentLandscape(newLandscape as keyof typeof landscapes);
+    setCurrentLandscape(newLandscape);
     const ls = landscapes[newLandscape];
     setPosition(ls.startPoint);
     setPath([ls.startPoint]);
@@ -520,7 +521,7 @@ export function LossLandscape({
               Choose a loss landscape:
             </div>
             <div className="flex flex-wrap gap-2">
-              {Object.entries(landscapes).map(([key, ls]) => (
+              {(Object.keys(landscapes) as LandscapeKey[]).map((key) => (
                 <button
                   key={key}
                   onClick={() => handleLandscapeChange(key)}
@@ -530,7 +531,7 @@ export function LossLandscape({
                       : 'bg-[var(--surface)] hover:bg-[var(--viz-grid)] border border-[var(--viz-grid)]'
                   }`}
                 >
-                  {ls.name}
+                  {landscapes[key].name}
                 </button>
               ))}
             </div>

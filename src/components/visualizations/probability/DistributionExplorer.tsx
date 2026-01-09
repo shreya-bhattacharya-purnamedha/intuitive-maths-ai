@@ -124,20 +124,20 @@ export function DistributionExplorer({
     for (let x = xDomain[0]; x <= xDomain[1]; x += step) {
       let y: number;
       if (currentDist === 'normal') {
-        y = dist.pdf(x, params.mean, params.std);
+        y = distributions.normal.pdf(x, params.mean, params.std);
       } else if (currentDist === 'uniform') {
-        y = dist.pdf(x, params.min, params.max);
+        y = distributions.uniform.pdf(x, params.min, params.max);
       } else if (currentDist === 'exponential') {
-        y = dist.pdf(x, params.rate);
+        y = distributions.exponential.pdf(x, params.rate);
       } else if (currentDist === 'bimodal') {
-        y = dist.pdf(x, params.mean1, params.mean2, params.std);
+        y = distributions.bimodal.pdf(x, params.mean1, params.mean2, params.std);
       } else {
         y = 0;
       }
       points.push({ x, y });
     }
     return points;
-  }, [currentDist, params, dist, xDomain]);
+  }, [currentDist, params, xDomain]);
 
   // Y scale based on PDF max
   const yMax = useMemo(() => Math.max(...pdfData.map(d => d.y)) * 1.2, [pdfData]);
@@ -167,18 +167,18 @@ export function DistributionExplorer({
   const generateSample = useCallback(() => {
     let sample: number;
     if (currentDist === 'normal') {
-      sample = dist.sample(params.mean, params.std);
+      sample = distributions.normal.sample(params.mean, params.std);
     } else if (currentDist === 'uniform') {
-      sample = dist.sample(params.min, params.max);
+      sample = distributions.uniform.sample(params.min, params.max);
     } else if (currentDist === 'exponential') {
-      sample = dist.sample(params.rate);
+      sample = distributions.exponential.sample(params.rate);
     } else if (currentDist === 'bimodal') {
-      sample = dist.sample(params.mean1, params.mean2, params.std);
+      sample = distributions.bimodal.sample(params.mean1, params.mean2, params.std);
     } else {
       sample = 0;
     }
     return sample;
-  }, [currentDist, params, dist]);
+  }, [currentDist, params]);
 
   // Add samples
   const addSamples = useCallback((count: number) => {
@@ -387,7 +387,7 @@ export function DistributionExplorer({
                 <div key={key}>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-xs text-[var(--foreground)]/60">
-                      {dist.paramLabels[key] || key}
+                      {(dist.paramLabels as Record<string, string>)[key] || key}
                     </label>
                     <span className="font-mono text-xs text-[var(--primary)]">
                       {value.toFixed(2)}

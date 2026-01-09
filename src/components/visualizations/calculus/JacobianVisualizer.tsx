@@ -421,8 +421,9 @@ export function JacobianVisualizer({
   }, [inputPoint, outputPoint, circlePoints, transformedCirclePoints, currentTransform, showGridLines, showTransformedCircle, interactive, id, markInteractionComplete, xScaleIn, yScaleIn, xScaleOut, yScaleOut, panelWidth, panelHeight, padding]);
 
   // Handle transform change
-  const handleTransformChange = useCallback((transform: string) => {
-    setCurrentTransform(transform as keyof typeof transformations);
+  type TransformKey = 'rotation' | 'scaling' | 'shear' | 'nonlinear' | 'neural';
+  const handleTransformChange = useCallback((transform: TransformKey) => {
+    setCurrentTransform(transform);
     setInputPoint([1.5, 1]); // Reset to default position
     markInteractionComplete(id);
   }, [id, markInteractionComplete]);
@@ -446,7 +447,7 @@ export function JacobianVisualizer({
               Choose a transformation:
             </div>
             <div className="flex flex-wrap gap-2">
-              {Object.entries(transformations).map(([key, transform]) => (
+              {(Object.keys(transformations) as TransformKey[]).map((key) => (
                 <button
                   key={key}
                   onClick={() => handleTransformChange(key)}
@@ -456,7 +457,7 @@ export function JacobianVisualizer({
                       : 'bg-[var(--surface)] hover:bg-[var(--viz-grid)] border border-[var(--viz-grid)]'
                   }`}
                 >
-                  {transform.name}
+                  {transformations[key].name}
                 </button>
               ))}
             </div>
