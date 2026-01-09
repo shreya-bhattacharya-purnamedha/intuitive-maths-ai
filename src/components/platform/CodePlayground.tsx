@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useVisualizationStore } from '@/lib/stores/visualizationStore';
 
 interface CodePlaygroundProps {
+  id?: string;
   language?: 'python' | 'javascript';
   initialCode: string;
   linkedVisualization?: string;
