@@ -409,8 +409,8 @@ export function DerivativeSensitivity({
   }, [funcDef.domain, id, markInteractionComplete]);
 
   // Handle function change
-  const handleFunctionChange = useCallback((func: string) => {
-    setCurrentFunction(func as keyof typeof functions);
+  const handleFunctionChange = useCallback((func: 'quadratic' | 'sine' | 'cubic' | 'relu' | 'sigmoid') => {
+    setCurrentFunction(func);
     // Reset position to middle of new domain
     const newDomain = functions[func].domain;
     setXPosition((newDomain[0] + newDomain[1]) / 2);
@@ -467,7 +467,7 @@ export function DerivativeSensitivity({
           <div className="bg-[var(--surface-elevated)] rounded-xl p-4">
             <div className="text-sm font-medium text-[var(--foreground)]/70 mb-3">Choose a function:</div>
             <div className="flex flex-wrap gap-2">
-              {Object.entries(functions).map(([key, func]) => (
+              {(Object.keys(functions) as Array<'quadratic' | 'sine' | 'cubic' | 'relu' | 'sigmoid'>).map((key) => (
                 <button
                   key={key}
                   onClick={() => handleFunctionChange(key)}
@@ -477,7 +477,7 @@ export function DerivativeSensitivity({
                       : 'bg-[var(--surface)] hover:bg-[var(--viz-grid)] border border-[var(--viz-grid)]'
                   }`}
                 >
-                  {func.name}
+                  {functions[key].name}
                 </button>
               ))}
             </div>
