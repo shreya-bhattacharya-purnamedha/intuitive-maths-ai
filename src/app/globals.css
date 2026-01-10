@@ -66,17 +66,7 @@
   --radius-xl: 16px;
 }
 
-/* Light mode overrides */
-@media (prefers-color-scheme: light) {
-  :root {
-    --background: #fafafa;
-    --foreground: #171717;
-    --surface: #ffffff;
-    --surface-elevated: #f5f5f5;
-    --viz-grid: #e5e5e5;
-    --viz-axis: #a3a3a3;
-  }
-}
+/* Dark theme is always used for optimal code/visualization readability */
 
 @theme inline {
   --color-background: var(--background);
